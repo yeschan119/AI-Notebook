@@ -1,0 +1,60 @@
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+build/
+.next/
+out/
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# cache
+.cache/
+.parcel-cache/
+.vite/
+turbo/
+
+# coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+
+# NestJS
+uploads/
+
+# testing
+playwright-report/
+test-results/
+
+# package managers
+.pnpm-store/
+
+# misc
+tmp/
+temp/
+
+#result
+server/ai-sessions/

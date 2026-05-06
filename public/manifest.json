@@ -1,0 +1,39 @@
+{
+    "manifest_version": 3,
+    "name": "AI Notebook",
+    "version": "0.1.0",
+    "description": "Record ChatGPT coding sessions for later review.",
+    "permissions": ["storage", "activeTab", "tabs"],
+    "host_permissions": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "http://localhost:3000/*"
+    ],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "content_scripts": [
+        {
+        "matches": [
+            "https://chatgpt.com/*",
+            "https://chat.openai.com/*"
+        ],
+        "js": ["content.js"],
+        "run_at": "document_idle"
+        }
+    ],
+    "web_accessible_resources": [
+    {
+        "resources": [
+            "notebook/index.html",
+            "notebook/assets/*",
+            "notebook/favicon.svg"
+        ],
+        "matches": ["<all_urls>"]
+        }
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    }
+}
