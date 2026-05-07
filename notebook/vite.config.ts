@@ -9,6 +9,6 @@ export default defineConfig({
     outDir: "../dist/notebook",
     emptyOutDir: false,
     minify: false,
-    sourcemap: true,
+    sourcemap: false,
   },
 });

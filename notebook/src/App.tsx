@@ -5,6 +5,7 @@ type QuestionItem = {
   question: string;
   sessionId: string;
   capturedAt: string;
+  url: string;
 };
 
 type ChatMessage = {
@@ -85,32 +86,71 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: "sans-serif" }}>
+    <div
+      style={{
+        display: "flex",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+        fontFamily:
+          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        background: "#212121",
+        color: "#ececec",
+        boxSizing: "border-box",
+      }}
+    >
       <aside
         style={{
-          width: 360,
-          borderRight: "1px solid #ddd",
+          width: 400,
+          flexShrink: 0,
+          borderRight: "1px solid #2f2f2f",
           padding: 16,
           display: "flex",
           flexDirection: "column",
           height: "100%",
+          background: "#171717",
+          boxSizing: "border-box",
         }}
       >
-        <h2>AI Notebook</h2>
 
+        <h2 style={{ margin: "0 0 16px" }}>AI Notebook</h2>
         <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="질문 검색"
-            style={{ flex: 1, padding: 8 }}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid #3f3f46",
+              background: "#2f2f2f",
+              color: "#ececec",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
           />
-          <button onClick={loadQuestions}>새로고침</button>
+
+          <button
+            onClick={loadQuestions}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid #3f3f46",
+              background: "#2f2f2f",
+              color: "#ececec",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            새로고침
+          </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
           {filteredQuestions.length === 0 && (
-            <p style={{ color: "#666" }}>검색 결과가 없습니다.</p>
+            <p style={{ color: "#a3a3a3" }}>검색 결과가 없습니다.</p>
           )}
 
           {filteredQuestions.map((item, index) => (
@@ -121,39 +161,164 @@ export default function App() {
                 padding: 12,
                 marginBottom: 8,
                 cursor: "pointer",
-                border: "1px solid #ddd",
-                borderRadius: 8,
-                background: selectedId === item.id ? "#eee" : "#fff",
+                borderRadius: 10,
+                border:
+                  selectedId === item.id
+                    ? "1px solid #565869"
+                    : "1px solid #3f3f46",
+                background: selectedId === item.id ? "#2f2f2f" : "#1f1f1f",
+                color: "#ececec",
+                boxSizing: "border-box",
               }}
             >
-              <strong>{item.question}</strong>
-              <br />
-              <small>{new Date(item.capturedAt).toLocaleString()}</small>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 500,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {item.question}
+                  </div>
+                  <small style={{ color: "#a3a3a3" }}>
+                    {new Date(item.capturedAt).toLocaleString()}
+                  </small>
+                </div>
+                <a
+
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+
+                    color: "#10a37f",
+                    textDecoration: "none",
+                    fontSize: 11,
+                    flexShrink: 0,
+                    padding: "3px 5px",
+                    borderRadius: 6,
+                    border: "1px solid #10a37f",
+                  }}
+                >
+                  Open
+                </a>
+              </div>
             </div>
           ))}
         </div>
       </aside>
+      <main
+        style={{
+          flex: 1,
+          minWidth: 0,
+          height: "100%",
+          overflowY: "auto",
+          background: "#212121",
+          boxSizing: "border-box",
+        }}
+      >
 
-      <main style={{ flex: 1, padding: 24, overflowY: "auto" }}>
-        {!detail && <p>질문을 선택하세요.</p>}
-
-        {detail?.messages.map((message) => (
+        {!detail && (
           <div
-            key={`${message.role}-${message.index}`}
             style={{
-              marginBottom: 16,
-              padding: 16,
-              border: "1px solid #ddd",
-              borderRadius: 8,
-              background: message.role === "user" ? "#f1f5f9" : "#fff",
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "48px 40px",
+              color: "#a3a3a3",
             }}
           >
-            <strong>{message.role === "user" ? "User" : "ChatGPT"}</strong>
-            <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.5, margin: 0 }}>
-              {normalizeText(message.content)}
-            </p>
+            질문을 선택하세요.
           </div>
-        ))}
+        )}
+
+        {detail?.messages.map((message) => {
+          const isUser = message.role === "user";
+          return (
+            <div
+              key={`${message.role}-${message.index}`}
+              style={{
+                width: "100%",
+                background: isUser ? "#212121" : "#303030",
+                boxSizing: "border-box",
+              }}
+            >
+
+              <div
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "24px 40px",
+                  display: "flex",
+                  gap: 16,
+                  alignItems: "flex-start",
+                }}
+              >
+
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: isUser ? "#3b82f6" : "#10a37f",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}
+                >
+
+                  {isUser ? "U" : "AI"}
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    textAlign: "left",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      marginBottom: 8,
+                      color: "#ececec",
+                    }}
+                  >
+
+                    {isUser ? "User" : "ChatGPT"}
+                  </div>
+                  <div
+                    style={{
+                      whiteSpace: "pre-wrap",
+                      lineHeight: 1.65,
+                      color: "#ececec",
+                      fontSize: 15,
+                      overflowWrap: "break-word",
+                    }}
+                  >
+                    {normalizeText(message.content)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </main>
     </div>
   );
