@@ -48,23 +48,66 @@ export class CaptureService {
         const dir = path.join(process.cwd(), "ai-sessions", sessionId);
         await fs.mkdir(dir, { recursive: true });
 
-        const event = {
-                type: "CHATGPT_CAPTURE",
-                ...dto,
-                capturedAt: dto.capturedAt || new Date().toISOString()
-            };
+        const filePath = path.join(dir, "events.jsonl");
 
-            await fs.appendFile(
-                path.join(dir, "events.jsonl"),
-                JSON.stringify(event) + "\n",
-                "utf8"
-            );
+        const event = {
+            type: "CHATGPT_CAPTURE",
+            ...dto,
+            capturedAt: dto.capturedAt || new Date().toISOString(),
+        };
+
+        const lastEvent = await this.getLastEvent(filePath);
+
+        if (lastEvent && this.isSameConversationSnapshot(lastEvent, event)) {
+            return {
+            ok: true,
+            skipped: true,
+            reason: "duplicate snapshot",
+            sessionId,
+            messageCount: dto.messages?.length ?? 0,
+            };
+        }
+
+        await fs.appendFile(filePath, JSON.stringify(event) + "\n", "utf8");
 
         return {
             ok: true,
+            skipped: false,
             sessionId,
-            messageCount: dto.messages?.length ?? 0
+            messageCount: dto.messages?.length ?? 0,
         };
+        }
+
+    private async getLastEvent(filePath: string): Promise<any | null> {
+        const content = await fs.readFile(filePath, "utf8").catch(() => "");
+
+        const lines = content.split("\n").filter(Boolean);
+
+        if (lines.length === 0) return null;
+
+        try {
+            return JSON.parse(lines[lines.length - 1]);
+        } catch {
+            return null;
+        }
+        }
+
+        private isSameConversationSnapshot(a: any, b: any): boolean {
+        const aMessages = a.messages ?? [];
+        const bMessages = b.messages ?? [];
+
+        if (aMessages.length !== bMessages.length) return false;
+
+        return aMessages.every((msg: any, index: number) => {
+            const other = bMessages[index];
+
+            return (
+            other &&
+            msg.role === other.role &&
+            msg.content === other.content &&
+            msg.index === other.index
+            );
+        });
     }
 
     async getQuestions(query?: string) {
@@ -92,20 +135,30 @@ export class CaptureService {
     }
 
     async loadQuestions() {
-            const events = await this.readEvents();
-            const questions = events.flatMap((event) =>
-                event.messages
-                .filter((message) => message.role === 'user')
-                .map((message) => ({
-                    id: `${event.sessionId}-${message.index}`,
-                    sessionId: event.sessionId,
-                    question: message.content,
-                    url: event.url,
-                    capturedAt: message.capturedAt ?? event.capturedAt,
-                })),
-            );
+        const events = await this.readEvents();
 
-            return questions;
+        const map = new Map<string, any>();
+
+        for (const event of events) {
+            for (const message of event.messages ?? []) {
+            if (message.role !== "user") continue;
+
+            const key = `${event.sessionId}:${message.index}:${message.content}`;
+
+            map.set(key, {
+                id: `${event.sessionId}-${message.index}`,
+                sessionId: event.sessionId,
+                question: message.content,
+                url: event.url,
+                capturedAt: message.capturedAt ?? event.capturedAt,
+            });
+            }
+        }
+
+        return Array.from(map.values()).sort(
+            (a, b) =>
+            new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime()
+        );
     }
 
     async getQuestionDetail(id: string) {
