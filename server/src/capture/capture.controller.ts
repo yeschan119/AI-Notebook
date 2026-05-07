@@ -1,4 +1,4 @@
-import { Body, Query, Controller, Post, Get, Param } from "@nestjs/common";
+import { Body, Query, Controller, Post, Get, Delete, Param } from "@nestjs/common";
 import { CaptureService } from "./capture.service";
 import { CaptureChatgptDto } from "./dto/capture-chatgpt.dto";
 
@@ -25,5 +25,10 @@ export class CaptureController {
     @Get('questions/:id')
     async getQuestionDetail(@Param('id') id: string) {
         return this.captureService.getQuestionDetail(id);
+    }
+
+    @Delete('questions')
+    async deleteQuestions(@Body() body: { ids: string[] }) {
+        return this.captureService.deleteQuestions(body.ids);
     }
 }

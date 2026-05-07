@@ -27,6 +27,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<QuestionDetail | null>(null);
   const [query, setQuery] = useState("");
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
 
   const filteredQuestions = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -37,6 +38,30 @@ export default function App() {
         item.question.toLowerCase().includes(keyword)
       );
   }, [questions, query]);
+
+  const allVisibleSelected =
+    filteredQuestions.length > 0 &&
+    filteredQuestions.every((item) => selectedQuestionIds.includes(item.id));
+
+    function toggleQuestion(id: string) {
+      setSelectedQuestionIds((prev) =>
+        prev.includes(id)
+          ? prev.filter((item) => item !== id)
+          : [...prev, id]
+      );
+    }
+
+    function toggleAllVisible() {
+      if (allVisibleSelected) {
+        setSelectedQuestionIds((prev) =>
+          prev.filter((id) => !filteredQuestions.some((q) => q.id === id))
+        );
+      } else {
+        setSelectedQuestionIds((prev) =>
+          Array.from(new Set([...prev, ...filteredQuestions.map((q) => q.id)]))
+        );
+      }
+    }
 
   useEffect(() => {
     loadQuestions();
@@ -76,6 +101,32 @@ export default function App() {
 
     const data: QuestionDetail = await res.json();
     setDetail(data);
+  }
+
+  async function deleteSelectedQuestions() {
+    if (selectedQuestionIds.length === 0) return;
+    const ok = window.confirm(`${selectedQuestionIds.length}개 항목을 삭제할까요?`);
+
+    if (!ok) return;
+    const res = await fetch(`${API_BASE}/questions`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ids: selectedQuestionIds,
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("삭제 실패:", res.status);
+      return;
+    }
+
+    setSelectedQuestionIds([]);
+    setSelectedId(null);
+    setDetail(null);
+    await loadQuestions();
   }
 
   function normalizeText(text: string) {
@@ -148,6 +199,49 @@ export default function App() {
           </button>
         </div>
 
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginBottom: 12,
+            alignItems: "center",
+          }}
+        >
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              color: "#a3a3a3",
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleAllVisible}
+            />
+            전체 선택
+          </label>
+
+          <button
+            onClick={deleteSelectedQuestions}
+            disabled={selectedQuestionIds.length === 0}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 6,
+              border: "1px solid #ef4444",
+              background:
+                selectedQuestionIds.length === 0 ? "#2f2f2f" : "#7f1d1d",
+              color: "#fff",
+              cursor: selectedQuestionIds.length === 0 ? "not-allowed" : "pointer",
+            }}
+          >
+            삭제 {selectedQuestionIds.length > 0 ? `(${selectedQuestionIds.length})` : ""}
+          </button>
+        </div>
+
         <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
           {filteredQuestions.length === 0 && (
             <p style={{ color: "#a3a3a3" }}>검색 결과가 없습니다.</p>
@@ -181,6 +275,13 @@ export default function App() {
                 }}
               >
 
+                <input
+                  type="checkbox"
+                  checked={selectedQuestionIds.includes(item.id)}
+                  onChange={() => toggleQuestion(item.id)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
@@ -198,13 +299,11 @@ export default function App() {
                   </small>
                 </div>
                 <a
-
                   href={item.url}
                   target="_blank"
                   rel="noreferrer"
                   onClick={(e) => e.stopPropagation()}
                   style={{
-
                     color: "#10a37f",
                     textDecoration: "none",
                     fontSize: 11,

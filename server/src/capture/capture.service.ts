@@ -161,6 +161,104 @@ export class CaptureService {
         );
     }
 
+    async deleteQuestions(ids: string[]) {
+        if (!ids || ids.length === 0) {
+            return {
+            ok: true,
+            requestedCount: 0,
+            deletedMessageCount: 0,
+            };
+        }
+
+        const targets = ids.map((id) => {
+            const lastDashIndex = id.lastIndexOf("-");
+
+            return {
+            id,
+            sessionId: id.slice(0, lastDashIndex),
+            messageIndex: Number(id.slice(lastDashIndex + 1)),
+            };
+        });
+
+        const targetsBySession = new Map<string, Set<number>>();
+
+        for (const target of targets) {
+            if (!Number.isFinite(target.messageIndex)) continue;
+
+            if (!targetsBySession.has(target.sessionId)) {
+            targetsBySession.set(target.sessionId, new Set());
+            }
+
+            targetsBySession.get(target.sessionId)!.add(target.messageIndex);
+        }
+
+        let deletedMessageCount = 0;
+
+        for (const [sessionId, targetIndexes] of targetsBySession.entries()) {
+            const filePath = path.join(this.baseDir, sessionId, "events.jsonl");
+
+            const content = await fs.readFile(filePath, "utf8").catch(() => "");
+
+            if (!content) continue;
+
+            const events = content
+            .split("\n")
+            .filter(Boolean)
+            .map((line) => JSON.parse(line));
+
+            const updatedEvents = events
+            .map((event) => {
+                const messages = event.messages ?? [];
+
+                const deleteRanges = Array.from(targetIndexes).map((targetIndex) => {
+                const nextUser = messages.find(
+                    (message) =>
+                    message.role === "user" && message.index > targetIndex
+                );
+
+                return {
+                    start: targetIndex,
+                    end: nextUser ? nextUser.index : Infinity,
+                };
+                });
+
+                const filteredMessages = messages.filter((message) => {
+                const shouldDelete = deleteRanges.some(
+                    (range) => message.index >= range.start && message.index < range.end
+                );
+
+                if (shouldDelete) {
+                    deletedMessageCount += 1;
+                }
+
+                return !shouldDelete;
+                });
+
+                return {
+                ...event,
+                messages: filteredMessages,
+                };
+            })
+            .filter((event) => (event.messages ?? []).length > 0);
+
+            const nextContent = updatedEvents
+            .map((event) => JSON.stringify(event))
+            .join("\n");
+
+            await fs.writeFile(
+            filePath,
+            nextContent ? `${nextContent}\n` : "",
+            "utf8"
+            );
+        }
+
+        return {
+            ok: true,
+            requestedCount: ids.length,
+            deletedMessageCount,
+        };
+    }
+
     async getQuestionDetail(id: string) {
         const events = await this.readEvents();
 
