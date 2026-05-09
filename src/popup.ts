@@ -15,54 +15,54 @@ async function updateStatus(): Promise<void> {
 }
 
 startButton.addEventListener("click", async () => {
-  const tabs = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
+    const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+    });
 
-  const tab = tabs[0];
-  console.log('tab', tabs)
+    const tab = tabs[0];
+    console.log('tab', tabs)
 
-  if (!tab?.url) {
-    console.error("현재 탭 URL을 읽을 수 없습니다.");
-    return;
-  }
+    if (!tab?.url) {
+        console.error("현재 탭 URL을 읽을 수 없습니다.");
+        return;
+    }
 
-  const currentUrl = normalizeConversationUrl(tab.url);
+    const currentUrl = normalizeConversationUrl(tab.url);
 
-  const storage = await chrome.storage.local.get(["sessionMap"]);
-  const sessionMap: Record<string, string> = storage.sessionMap ?? {};
-  
+    const storage = await chrome.storage.local.get(["sessionMap"]);
+    const sessionMap: Record<string, string> = storage.sessionMap ?? {};
+    
 
-  const existingSessionId = sessionMap[currentUrl];
-  const sessionId = existingSessionId ?? crypto.randomUUID();
+    const existingSessionId = sessionMap[currentUrl];
+    const sessionId = existingSessionId ?? crypto.randomUUID();
 
-  sessionMap[currentUrl] = sessionId;
-  console.log('click click 시발', existingSessionId, sessionId)
+    sessionMap[currentUrl] = sessionId;
+    console.log('click click 시발', existingSessionId, sessionId)
 
-  await chrome.storage.local.set({
-    recordingEnabled: true,
-    sessionId,
-    sessionMap,
-  });
+    await chrome.storage.local.set({
+        recordingEnabled: true,
+        sessionId,
+        sessionMap,
+    });
 
-  await updateStatus();
+    await updateStatus();
 });
 
 function normalizeConversationUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
+    try {
+        const parsed = new URL(url);
 
-    const match = parsed.pathname.match(/\/c\/[^/]+/);
+        const match = parsed.pathname.match(/\/c\/[^/]+/);
 
-    if (match) {
-      return `${parsed.origin}${match[0]}`;
+        if (match) {
+        return `${parsed.origin}${match[0]}`;
+        }
+
+        return parsed.origin;
+    } catch {
+        return url;
     }
-
-    return parsed.origin;
-  } catch {
-    return url;
-  }
 }
 
 stopButton.addEventListener("click", async () => {
