@@ -1,17 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Notebook</title>
+    <link rel="stylesheet" href="popup.css" />
   </head>
+
   <body>
-    <h3>AI Notebook</h3>
+    <div class="window">
+      <div class="header">
+        <div>
+          <div class="title">AI Notebook</div>
+          <div class="subtitle">
+            Smart meeting recording and transcription
+          </div>
+        </div>
 
-    <button id="start">Start Recording</button>
-    <button id="stop">Stop Recording</button>
-    <button id="view">Open Notebook</button>
+        <div class="traffic-lights">
+          <div class="light red"></div>
+          <div class="light yellow"></div>
+          <div class="light green"></div>
+        </div>
+      </div>
 
-    <p id="status">Loading...</p>
+      <div class="button-group">
+        <button id="start" class="action-btn">
+          <span class="indicator"></span>
+          Start Recording
+        </button>
+
+        <button id="stop" class="action-btn">
+          <span class="indicator"></span>
+          Stop Recording
+        </button>
+      </div>
+
+      <button id="view" class="notebook-btn">
+        Open Notebook
+      </button>
+
+      <p id="status" class="status">Ready to record</p>
+    </div>
 
     <script type="module" src="popup.js"></script>
   </body>

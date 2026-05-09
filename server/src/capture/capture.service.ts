@@ -76,7 +76,7 @@ export class CaptureService {
             sessionId,
             messageCount: dto.messages?.length ?? 0,
         };
-        }
+    }
 
     private async getLastEvent(filePath: string): Promise<any | null> {
         const content = await fs.readFile(filePath, "utf8").catch(() => "");
@@ -90,9 +90,9 @@ export class CaptureService {
         } catch {
             return null;
         }
-        }
+    }
 
-        private isSameConversationSnapshot(a: any, b: any): boolean {
+    private isSameConversationSnapshot(a: any, b: any): boolean {
         const aMessages = a.messages ?? [];
         const bMessages = b.messages ?? [];
 
@@ -242,13 +242,13 @@ export class CaptureService {
             .filter((event) => (event.messages ?? []).length > 0);
 
             const nextContent = updatedEvents
-            .map((event) => JSON.stringify(event))
-            .join("\n");
+                .map((event) => JSON.stringify(event))
+                .join("\n");
 
-            await fs.writeFile(
-            filePath,
-            nextContent ? `${nextContent}\n` : "",
-            "utf8"
+                await fs.writeFile(
+                filePath,
+                nextContent ? `${nextContent}\n` : "",
+                "utf8"
             );
         }
 

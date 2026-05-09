@@ -15,15 +15,55 @@ async function updateStatus(): Promise<void> {
 }
 
 startButton.addEventListener("click", async () => {
-    const { sessionId } = await chrome.storage.local.get(["sessionId"]);
+  const tabs = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
 
-    await chrome.storage.local.set({
-        recordingEnabled: true,
-        sessionId: sessionId ?? crypto.randomUUID(),
-    });
+  const tab = tabs[0];
+  console.log('tab', tabs)
 
-    await updateStatus();
+  if (!tab?.url) {
+    console.error("현재 탭 URL을 읽을 수 없습니다.");
+    return;
+  }
+
+  const currentUrl = normalizeConversationUrl(tab.url);
+
+  const storage = await chrome.storage.local.get(["sessionMap"]);
+  const sessionMap: Record<string, string> = storage.sessionMap ?? {};
+  
+
+  const existingSessionId = sessionMap[currentUrl];
+  const sessionId = existingSessionId ?? crypto.randomUUID();
+
+  sessionMap[currentUrl] = sessionId;
+  console.log('click click 시발', existingSessionId, sessionId)
+
+  await chrome.storage.local.set({
+    recordingEnabled: true,
+    sessionId,
+    sessionMap,
+  });
+
+  await updateStatus();
 });
+
+function normalizeConversationUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+
+    const match = parsed.pathname.match(/\/c\/[^/]+/);
+
+    if (match) {
+      return `${parsed.origin}${match[0]}`;
+    }
+
+    return parsed.origin;
+  } catch {
+    return url;
+  }
+}
 
 stopButton.addEventListener("click", async () => {
     await chrome.storage.local.set({
