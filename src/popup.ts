@@ -15,11 +15,11 @@ async function updateStatus(): Promise<void> {
 }
 
 startButton.addEventListener("click", async () => {
-    const sessionId = crypto.randomUUID();
+    const { sessionId } = await chrome.storage.local.get(["sessionId"]);
 
     await chrome.storage.local.set({
         recordingEnabled: true,
-        sessionId
+        sessionId: sessionId ?? crypto.randomUUID(),
     });
 
     await updateStatus();
